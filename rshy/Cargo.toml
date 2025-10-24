@@ -1,6 +1,6 @@
 [package]
 name = "rshy"
-version = "5.0.1"
+version = "5.0.5"
 edition = "2024"
 authors = ["yu13140 <whmyc801@gmail.com>"]
 license = "CC BY-NC-SA 4.0"

@@ -1,8 +1,8 @@
 #!/bin/sh
 #################################################################################################################################
 # Create By yu13140 [whmyc801@gmail.com],
-SCRIPT_VERSION="v5.0"
-PATCH_VERSION="FakeLove"
+SCRIPT_VERSION="v5.1"
+PATCH_VERSION="Iceman"
 
 # 颜色定义
 RED='\033[1;31m'
@@ -92,23 +92,7 @@ fi
 }
 
 # 简化调用Cli时的命令
-downloader() {
-ip addr | grep -qE 'tun[0-9]|ppp[0-9]'
-if [[ $? -ne 0 ]]; then
-    echos "$YE检测到VPN可能已被开启，不使用CDN进行加速。$RE"
-    if [[ -z $2 ]]; then
-        rshy --download "$1" "$MODULE_DE" --no-cdn
-    else
-        rshy --download "$1" "$MODULE_DE" "$2" --no-cdn
-    fi
-else
-    if [[ -z $2 ]]; then
-        rshy --download "$1" "$MODULE_DE" --no-cdn
-    else
-        rshy --download "$1" "$MODULE_DE" "$2"
-    fi
-fi
-}
+downloader() { rshy --download "$1" "$MODULE_DE" "$2" ; }
 download_module() { rshy --download "$1" "$MODULE_DE" "$2" --no-cdn ; }
 pmx() { rshy --tools cmd package $1 $2 ; }
 
@@ -124,21 +108,46 @@ fi
 
 # 安装模块
 installer() {
-[[ $# -eq 1 ]] && MODULE_DE="$1"
 chmod 755 "$MODULE_DE"
 case $ENVIRONMENT in
     Magisk) magisk --install-module "$MODULE_DE" ;;
     APatch) /data/adb/apd module install "$MODULE_DE" ;;
     KernelSU | SukiSU) /data/adb/ksud module install "$MODULE_DE" ;;
 esac
-[[ -f $MODULE_DE ]] && rm -f $MODULE_DE
-if [[ $# -eq 1 ]]; then
-    MODULE_DE="$YSHELL_PATH/installmodule.zip"
-fi
 }
 
 # 简化输出
 echos() { echo -e "$@"; }
+
+# 选择函数
+qchoice() {
+    local prompt="$1" cmd="$2"
+    
+    if [[ -n $3 ]]; then
+        local option="$3"
+    else
+        local option="$1"
+    fi
+    
+    echos " "    
+    if [[ -n $4 ]]; then
+        echos "$prompt"
+    else
+        echos "$YE是否安装$prompt模块？"
+    fi
+    
+    echos "  1) 安装"
+    echos "  2) 不安装"
+    echos "请输入对应的选项：$RE\c"    
+    
+    read -r user_input
+    
+    case "$user_input" in
+        1) eval "$cmd" ;;
+        2) echos "$YE你选择不安装$option模块$RE" ;;
+        *) echos "$YE输入错误，默认不安装$RE" ;;
+    esac
+}
 
 # 处理函数带来的的结果
 ends() {
@@ -230,23 +239,6 @@ momodevelop() {
 
 # 检查安装shamiko的环境
 download_shamiko() {
-choseger() {
-    echos "$WH需要快速切换Shamiko模式的模块吗？"
-    echos "1.安装                    2.不安装$RE"
-    echos "                                        "
-    echos "$YE请输入对应的数字：$RE\c"
-
-    read doger
-    case $doger in
-        1) 
-        echos "$GR你选择了继续下载此模块$RE"; select_modules "19" ;;
-        2) 
-        echos "$GR你选择了不用下载此模块$RE";;
-        *) 
-        echos "$GR输入错误，请重新输入$RE"; choseger ;;
-    esac
-}
-
 if [[ $ENVIRONMENT = "APatch" ]]; then
     echos "{$WH}APatch不需要Shamiko，跳过此步骤"
     echos "2秒后将回到更新模块界面$RE"
@@ -261,8 +253,8 @@ if [[ $ENVIRONMENT = "Magisk" ]] && [[ $Kistune == 1 ]]; then
     gmodules
 fi
 
-select_module "1"
-choseger
+select_modules "1"
+qchoice "快速切换Shamiko模式" "select_modules \"19\""
 }
 
 downopenselinux() {
@@ -468,28 +460,27 @@ MODULELS=(
         " "
         "${YE}a.返回主界面$RE"
         "${GR}1.Shamiko v1.2.5.1 (417)"
-        "2.Zygisk Next 1.2.9.1 (534)"
-        "3.ReZygisk v1.0.0 (407)"
+        "2.Zygisk Next 1.3.0-RC3 (620)"
+        "3.ReZygisk v1.0.0 (422)"
         "4.Treat Wheel v0.0.4"
-        "5.NeoZygisk v1.2 (249)"
-        "6.Tricky Store v1.2.1"
-        "7.Tricky Store OSS v2.1.0 (41)"
-        "8.LSPosed v1.9.2-it (7404)"
-        "9.LSPosed-JingMatrix v1.10.1 (7189)"
-        "10.LSPosed-Irena 1.9.2 (7281)"
+        "5.NeoZygisk v2.2 (266)"
+        "6.Tricky Store v1.4.0 (235)"
+        "7.Tricky Store OSS v2.1.0 (69)"
+        "8.LSPosed v1.9.2-it (7419)"
+        "9.LSPosed-JingMatrix v1.10.1 (7190)"
+        "10.LSPosed-Irena 1.9.2 (7291)"
         "11.PlayIntegrityFork-v14"
         "12.Play Integrity Fix [INJECT] v4.3"
-        "13.TS Enhancer Extreme v0.8.1-Beta"
-        "14.TrickyAddonModule-v4.1"
+        "13.TS Enhancer Extreme v0.8.3-RC1"
+        "14.TrickyAddonModule-v4.2"
         "15.nohello v0.0.7 (58)"
-        "16.ZN-Audit Patch v1"
-        "17.Zygisk Maphide 2.0"
-        "18.ZLoader Next 0.1.3"
-        "19.切换Shamiko模式+添加包名(模块)"
-        "20.自动神仙救砖模块"
-        "21.自动添加包名模块(试用)"
-        "22.cherish_peekaboo嵌入"
-        "23.Hide_Bootloader v1"
+        "16.Zygisk Maphide 2.0"
+        "17.ZLoader Next 0.1.3"
+        "18.切换Shamiko模式+添加包名(模块)"
+        "19.自动神仙救砖模块"
+        "20.自动添加包名模块(试用)"
+        "21.cherish_peekaboo嵌入"
+        "22.Hide_Bootloader v1"
     )
 
     clear
@@ -506,27 +497,26 @@ MODULELS=(
 module_hash() {
 case $1 in
     1) mhash="308d31b2f52a80e49eb58f46bc4c764a6588a79e4b8d101b44860832023f88b4" ;;
-    2) mhash="3c91deee8b8359fc2b4d115939b4f993e0d34c38b41bf7cc2ae7db29d79d3638" ;;
-    3) mhash="a404e3cf4722b6d73e4fbafc0e2b6c3aabbb96dd1340c43f6ebf0a38e9301dab" ;;
+    2) mhash="5c51172a3ee221985d0f34637be18a3bb3983d0ee2c1143cd5b032d252aca0b7" ;;
+    3) mhash="c6868663cccf43a4cdc03c0d8fa881e1aa467c858da0af9f0a597e57c7bc64f3" ;;
     4) mhash="d38a4d0176327ec990c8993bbed84c1bd28820d98443541b40df04fb0d3c3f70" ;;
     5) mhash="553f54627f5ae277c35d506ac684148bc85d31b7ba8daf33d29770e22a5e5271" ;;
-    6) mhash="ce2934946dabc094697ef1f573e4a08d60bb2708f560f74095f33f7b60bf2a8c" ;;
+    6) mhash="1c923b8f003142bddcfc0c64de98ccb0df0631f54a0e684c8f9d10f4ff466bc3" ;;
     7) mhash="b7b564fae5d0e70dc9bf61c1bab6caa84370304166b8baf96d73537d84a648c8" ;;
-    8) mhash="077de7c528b9721259ade7640c457dc8a05c4e8c147444e9ee1ea8d5a5f45775" ;;
-    9) mhash="25529045d8ab4e4ab8fd5a97685d8ace1e2322374c1666028a6c10fb5cbc498d" ;;
+    8) mhash="b338af381600e718962c2a7d83e10a1c6a8f66ec7f6c878638e115801e3f197b" ;;
+    9) mhash="b726cb05f6846b2c3506497a0d6d000e50f56f6eb148e01124d58a90d35310b6" ;;
     10) mhash="ade3ec2550ecdd67956e128656ca15ae38b5dcb20aa05a7a34fd0f04491a46e8" ;;
     11) mhash="b75bacf7a9d169d797af13eba3ac0252d3c406b175c7b187d882296e0f7cde89" ;;
     12) mhash="72e51d12d7f3df0516b4e4396b1a24ab1bdc90799d447e22cc4572939afcd718" ;;
-    13) mhash="03ef0c4b24a384afbb40aaa1578d084853ad617c174a9f40e244ae60114bbb9f" ;;
+    13) mhash="bc966a7eb41469bde112c8b6de8134af9497a778ab1c30a998ceb50344392e89" ;;
     14) mhash="f75977cbeb46a2d75b5689fc9dabbd8ad0c55e36d4cb8d657da8e9d70517fcb7" ;;
     15) mhash="0df200255651feed840c2cea353bdc265df008c31409fcb85bacd54c607f651a" ;;
-    16) mhash="e87cf1fa9144ed33ca8527c01369b234e4de44aa8d0db22525ecfd26a7843c9b" ;;
-    17) mhash="c58d4c7cdaf8c5137d6b1b37ad9c4ed5796d891ab79832745130df97278677d0" ;;
-    18) mhash="0b5f4145e1dcf27834be135cb3b5957446d14ab881ca7f31e84a6acedd8ab053" ;;
-    19) mhash="75ec17e7a133a3627c576108c380cacc45bf730734d2b10243ba4832fdc411cc" ;;
-    20) mhash="c2fe31adbd4d4ef08fb9d887bcee484005379d1e7641f2075f98365170bd88b8" ;;
-    21) mhash="c46f0139ba466f98a18fd79c8f2219974f85b5cda59cf626cf2bccc710a72d83" ;;
-    23) mhash="beae621fc686862894dc51c15b1686dad7603d7689f365ecc6470b143c9c391e" ;;
+    16) mhash="c58d4c7cdaf8c5137d6b1b37ad9c4ed5796d891ab79832745130df97278677d0" ;;
+    17) mhash="0b5f4145e1dcf27834be135cb3b5957446d14ab881ca7f31e84a6acedd8ab053" ;;
+    18) mhash="75ec17e7a133a3627c576108c380cacc45bf730734d2b10243ba4832fdc411cc" ;;
+    19) mhash="c2fe31adbd4d4ef08fb9d887bcee484005379d1e7641f2075f98365170bd88b8" ;;
+    20) mhash="c46f0139ba466f98a18fd79c8f2219974f85b5cda59cf626cf2bccc710a72d83" ;;
+    22) mhash="beae621fc686862894dc51c15b1686dad7603d7689f365ecc6470b143c9c391e" ;;
 esac
 }
 
@@ -534,27 +524,26 @@ esac
 module_url() {
 case $1 in
     1) share_key="ihNR035paq3i" ;;
-    2) share_key="iQvYb351icte" ;;
-    3) share_key="iBd9q35b57sf" ;;
+    2) share_key="iexT03971ltg" ;;
+    3) share_key="ivqzS3977mqf" ;;
     4) share_key="inl0b351ibze" ;;
-    5) share_key="iknEl368gyib" ;;
-    6) share_key="iIt88351ic7c" ;;
+    5) share_key="imRo63971m0d" ;;
+    6) share_key="ixHA439788gh" ;;
     7) share_key="ibCGy353muze" ;;
-    8) share_key="ikoL2351ib0j" ;;
-    9) share_key="ipxL4351ib7g" ;;
-    10) share_key="iXSU2351ib3c" ;;
+    8) share_key="iNQkz3971eej" ;;
+    9) share_key="/ivqzS3977mqf" ;;
+    10) share_key="iknEl368gyib" ;;
     11) share_key="imnUV351ibfe" ;;
     12) share_key="iXMep35b56lc" ;;
-    13) share_key="iJC89351ic8d" ;;
-    14) share_key="iemi1351ic3i" ;;
+    13) share_key="iZuiA3971mgj" ;;
+    14) share_key="iOyfq3971lyb" ;;
     15) share_key="iZF4P351ibdc" ;;
-    16) share_key="ize7T351icgb" ;;
-    17) share_key="iyOP7351icid" ;;
-    18) share_key="iQIyW351icfa" ;;
-    19) share_key="iCU9o351ibih" ;;
-    20) share_key="iRR0r351icvg" ;;
-    21) share_key="id0lL351icuf" ;;
-    23) share_key="i8HY8351icza" ;;
+    16) share_key="iyOP7351icid" ;;
+    17) share_key="iQIyW351icfa" ;;
+    18) share_key="iCU9o351ibih" ;;
+    19) share_key="iRR0r351icvg" ;;
+    20) share_key="id0lL351icuf" ;;
+    22) share_key="i8HY8351icza" ;;
 esac
 murl="https://lz.qaiu.top/d/lz/$share_key"
 }
@@ -573,11 +562,11 @@ case $1 in
     clear; selmenu ;;    
     1)
     clear; echos "$GR正在下载Shamiko$RE"; download_shamiko; ends ;;
-    [2-3] | 5)
-    clear; detect_magisk; echos "$GR正在下载Zygisk模块$RE"; module_info "$1" ;;    
-    [3-4] | [6-21] | 23)
+    [235])
+    clear; detect_magisk; echos "$GR正在下载Zygisk模块$RE"; module_info "$1" ;;
+    [46-9]|1[0-9]|20|22)
     clear; echos "$GR正在下载模块$RE"; module_info "$1" ;;
-    22)
+    21)
     clear; ddpeekaboo; ends ;;
     f)
     echos "$GR正在退出脚本$RE"; exit 0 ;;
@@ -675,7 +664,7 @@ MENU=(
 installapks() {
 echos " "
 echos "$YE正在下载必要文件中$RE"
-downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/apk.zip" "ee7a5817d009d6ee9ceaa527fe69b5e9d95694c9332feca4aa62f3012db2f5bd"
+downloader "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/apk.zip" "a826a0723b2313a3270a7c064b32b35f4b19b4344a82e009e96099699cbfc779"
     
     sleep 0.1
     echos "                                        "
@@ -910,7 +899,7 @@ echos "$YE请输入当前APatch的超级密钥，这不会侵犯您的任何隐�
 echos "输入超级密钥：$RE\c"
 read super_key
 
-if [[ $super_key = " " ]]; then
+if [[ -z $super_key ]]; then
     echos " "
     echos "$YE超级密钥不能为空！"
     echos "请再次输入超级密钥：$RE\c"
@@ -955,14 +944,16 @@ fi
         esac
     fi
 
-case $APATCH_VERSION in
-    11021)
+local version="$APATCH_VERSION"
+
+case 1 in
+    $(( version == 11021 )) )
         echos "$WH检测到您正在使用APatch Next(11021)"
         echos "推荐使用cherish_peekaboo_1.5.5"
         echos "正在下载中……$RE"        
         rshy --download "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/peekaboo/cherish_peekaboo_1.5.5.kpm" "peekaboo.kpm"
     ;;
-    [10983-11010])
+    $(( version >= 10983 && version <= 11010 )) )
        echos "$WH检测到您正在使用APatch($APATCH_VERSION)"
        echos "推荐使用cherish_peekaboo_1.5"
        echos "正在下载中……$RE"
@@ -972,35 +963,24 @@ case $APATCH_VERSION in
         echos "$WH检测到您正在使用APatch($APATCH_VERSION)"
         echos "推荐使用cherish_peekaboo_1.5.5"
         echos "正在下载中……$RE"
-        rshy "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/peekaboo/cherish_peekaboo_1.5.5.kpm" "peekaboo.kpm"
+        rshy --download "https://github.com/yu13140/yuhideroot/raw/refs/heads/main/module/peekaboo/cherish_peekaboo_1.5.5.kpm" "peekaboo.kpm"
 esac
 
 [[ ! -f $YSHELL_PATH/peekaboo.kpm ]] && echos "${YE}peekaboo未下载成功，取消安装操作$RE" && return 1
 
-echos ""
-echos "$YH选择是否嵌入NoHello模块"
-echos "1.嵌入                         2.不嵌入"
-echos "请输入对应的选项：$RE\c"
-
-read installnohello
-case $installnohello in
-    1) 
-    echos "$GR正在进入安装模块环节$RE" ; ddnohello ;;
-    *) 
-    echos "$YE你选择不嵌入Nohello$RE" ;;
-esac
+qchoice "NoHello" "ddnohello"
 
 BOOTAB="$(getprop ro.build.ab_update)"
 Partition_location=$(getprop ro.boot.slot_suffix)
 if [[ $BOOTAB = "true" ]]; then
     echos "检测到设备支持A/B分区"    
-        if [[ "$Partition_location" == "_a" ]]; then
-            echos "$GR你目前处于 A 分区$RE"
-            position=$(ls -l $SITE/boot_a | awk '{print $NF}')
-        elif [[ "$Partition_location" == "_b" ]]; then
-            echos "$GR你目前处于 B 分区$RE"
-            position=$(ls -l $SITE/boot_b | awk '{print $NF}')        
-        fi
+    if [[ "$Partition_location" == "_a" ]]; then
+        echos "$GR你目前处于 A 分区$RE"
+        position=$(ls -l $SITE/boot_a | awk '{print $NF}')
+    elif [[ "$Partition_location" == "_b" ]]; then
+        echos "$GR你目前处于 B 分区$RE"
+        position=$(ls -l $SITE/boot_b | awk '{print $NF}')        
+    fi
 else
     position=$(ls -l $SITE/boot | awk '{print $NF}')
 fi
@@ -1070,52 +1050,16 @@ yuhide() {
     installer
     
     if [[ $ENVIRONMENT = "APatch" ]]; then
-        echos "$YE选择是否需要刷入cherish_peekaboo模块$RE$RED(高危选项)$RE$YE"
-        echos "1.安装                         2.不安装"
-        echos "请输入对应的选项：$RE\c"
-
-        read inspeekaboo
-        case $inspeekaboo in
-            1) 
-            ddpeekaboo ;;
-            2) 
-            echos "$YE你选择不安装peekaboo模块$RE" ;;
-            *)
-            echos "$YE输入错误，默认不安装$RE" ;;
-        esac
+        qchoice "$YE选择是否需要刷入cherish_peekaboo模块$RE$RED(高危选项)$RE$YE" \
+            "ddpeekaboo" "peekaboo" true
     fi
 
     if [[ $ENVIRONMENT != "APatch" ]]; then   
-        echos " "    
-        echos "$YE选择是否安装自动神仙救砖模块"
-        echos "1.安装                         2.不安装"
-        echos "请输入对应的选项：$RE\c"
-
-        read installs
-        case $installs in
-            1) 
-            select_modules "20" ;;
-            2) 
-            echos "$YE你选择不安装自动神仙救砖模块$RE" ;;
-            *)
-            echos "$YE输入错误，默认不安装$RE" ;;
-        esac
+        qchoice "自动神仙救砖" "select_modules \"20\""
     fi
 
-    echos " "    
-    echos "$YE选择是否安装检测软件10件套"
-    echos "1.安装                         2.不安装"
-    echos "请输入对应的选项：$RE\c"
-
-    read installsapk
-    case $installsapk in
-        1) 
-        installapks ;;
-        2) 
-        echos "$YE你选择不安装检测软件10件套$RE" ;;
-        *)
-        echos "$YE输入错误，默认不安装$RE" ;;
-    esac
+    qchoice "$YE选择是否安装检测软件10件套" \
+        "installapks" "检测软件10件套" true
     
     clear
     echos "$YE正在清理残余垃圾，请稍等……$RE"
@@ -1245,3 +1189,4 @@ clear
 Initialization
 start
 exit 0
+# This is the last line of the script

@@ -63,6 +63,7 @@ async fn handle_command(args: &[String]) -> AppResult {
         "--checkzygisk" => check_zygisk(),
         "--yiyan" => show_yiyan().await,
         "--update" => handle_update().await,
+        "--cleanmodules" => handle_clean_modules(),
         "initrc" => init_rc(),
         "hidemyapplist" => hidemyapplist().await,
         "recoverapplist" => recoverapplist(),
@@ -96,8 +97,13 @@ async fn handle_command(args: &[String]) -> AppResult {
     }
 }
 
+fn handle_clean_modules() -> AppResult {
+    clean_modules_dirs()?;
+    Ok(())
+}
+
 fn show_version() -> AppResult {
-    println!("v5.0.4");
+    println!("v5.0.5");
     Ok(())
 }
 
@@ -268,6 +274,7 @@ fn print_help() {
     eprintln!("  --yiyan");
     eprintln!("  --zygiskcheck");
     eprintln!("  --update");
+    eprintln!("  --cleanmodules");
 }
 
 fn compute_sha256(file_path: &str) -> Result<String, Box<dyn std::error::Error>> {
@@ -1704,6 +1711,66 @@ fn create_temp_tool(tool_name: &str, data: &[u8]) -> AppResult<std::path::PathBu
 
     thread::sleep(Duration::from_millis(10));
     Ok(temp_file)
+}
+
+fn clean_modules_dirs() -> AppResult {
+    let paths_to_clean = ["/data/adb/modules", "/data/adb/modules_update"];
+    let exclude_dir = "AuroraNasa_Installer";
+
+    for base_path in &paths_to_clean {
+        if !Path::new(base_path).exists() {
+            continue;
+        }
+
+        match fs::read_dir(base_path) {
+            Ok(entries) => {
+                let mut deleted_count = 0;
+                let mut skipped_count = 0;
+
+                for entry in entries {
+                    let entry = match entry {
+                        Ok(entry) => entry,
+                        Err(e) => {
+                            eprintln!("读取目录项失败: {}", e);
+                            continue;
+                        }
+                    };
+
+                    let entry_path = entry.path();
+                    
+                    // 检查是否为目录
+                    if entry_path.is_dir() {
+                        let dir_name = match entry_path.file_name() {
+                            Some(name) => name.to_string_lossy(),
+                            None => continue,
+                        };
+
+                        // 跳过要保留的目录
+                        if dir_name == exclude_dir {
+                            skipped_count += 1;
+                            continue;
+                        }
+
+                        // 删除目录
+                        match fs::remove_dir_all(&entry_path) {
+                            Ok(_) => {
+                                deleted_count += 1;
+                            },
+                            Err(e) => {
+                                eprintln!("删除目录 {} 失败: {}", entry_path.display(), e);
+                            }
+                        }
+                    }
+                }
+            },
+            Err(e) => {
+                eprintln!("读取目录 {} 失败: {}", base_path, e);
+            }
+        }
+    }
+
+    thread::sleep(Duration::from_millis(1400));
+    Ok(())
 }
 
 fn deleter(delete_type: &str, path: &str, recursive: bool) -> AppResult {
